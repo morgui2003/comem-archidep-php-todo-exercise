@@ -27,8 +27,9 @@ if (isset($_POST['action'])) {
 
       $title = $_POST['title'];
       if ($title && $title !== '') {
-        $insertQuery = 'INSERT INTO todo VALUES(NULL, \''.$title.'\', FALSE, CURRENT_TIMESTAMP)';
-        if (!$db->query($insertQuery)) {
+        $insert = $db->prepare('INSERT INTO todo VALUES(NULL, :title, FALSE, CURRENT_TIMESTAMP)');
+        $insert->bindParam('title', $title);
+        if (!$insert->execute()) {
           die(print_r($db->errorInfo(), true));
         }
       }
@@ -44,7 +45,7 @@ if (isset($_POST['action'])) {
 
       $id = $_POST['id'];
       if(is_numeric($id)) {
-        $updateQuery = ''; // IMPLEMENT ME
+        $updateQuery = 'UPDATE todo SET done = !done WHERE id = ' . $id;
         if(!$db->query($updateQuery)) {
           die(print_r($db->errorInfo(), true));
         }
@@ -60,7 +61,7 @@ if (isset($_POST['action'])) {
 
       $id = $_POST['id'];
       if(is_numeric($id)) {
-        $deleteQuery = ''; // IMPLEMENT ME
+        $deleteQuery = 'DELETE FROM todo WHERE id = ' . $id;
         if(!$db->query($deleteQuery)) {
           die(print_r($db->errorInfo(), true));
         }
@@ -77,7 +78,7 @@ if (isset($_POST['action'])) {
 /**
  * Select all tasks from the database.
  */
-$selectQuery = ''; // IMPLEMENT ME
+$selectQuery = 'SELECT * FROM todo ORDER BY created_at DESC;';
 $items = $db->query($selectQuery);
 ?>
 
@@ -132,7 +133,7 @@ $items = $db->query($selectQuery);
         <?php foreach($items as $item): ?>
           <div class='list-group-item d-flex justify-content-between align-items-center<?php if($item['done']): ?> list-group-item-success<?php else: ?> list-group-item-warning<?php endif;?>'>
 
-            <div class='title'><?= $item['title'] ?></div>
+            <div class='title'><?= htmlspecialchars($item['title']) ?></div>
 
             <!-- Todo item controls -->
             <form action='<?= BASE_URL ?>' method='post'>
